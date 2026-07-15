@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProTrade Simulator</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Librería para gráficos profesionales -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <!-- PANTALLA DE LOGIN / REGISTRO -->
+    <!-- LOGIN -->
     <div id="auth-container" class="auth-box">
         <h1>ProTrade <span>Simulator</span></h1>
         <p>Mercado de inversión virtual</p>
@@ -21,10 +20,8 @@
         <p id="auth-message"></p>
     </div>
 
-    <!-- DASHBOARD PROFESIONAL -->
+    <!-- DASHBOARD -->
     <div id="dashboard-container" class="dashboard" style="display: none;">
-        
-        <!-- HEADER -->
         <header>
             <div class="logo">ProTrade <span>SIM</span></div>
             <div class="user-info">
@@ -33,12 +30,8 @@
             </div>
         </header>
 
-        <!-- CONTENIDO PRINCIPAL -->
         <div class="main-content">
-            
-            <!-- COLUMNA IZQUIERDA: PORTAFOLIO Y MERCADO -->
             <div class="left-column">
-                <!-- TARJETA DE PORTAFOLIO -->
                 <div class="card portfolio-card">
                     <h3>Tu Portafolio</h3>
                     <div class="balance">
@@ -57,18 +50,13 @@
                     </div>
                 </div>
 
-                <!-- TARJETA DE MERCADO (COMPARATIVA) -->
                 <div class="card market-card">
                     <h3>Mercado Cripto</h3>
-                    <div id="crypto-list">
-                        <!-- Se llena dinámicamente con JS -->
-                    </div>
+                    <div id="crypto-list"></div>
                 </div>
             </div>
 
-            <!-- COLUMNA DERECHA: GRÁFICO Y TRADING -->
             <div class="right-column">
-                <!-- TARJETA DE GRÁFICO -->
                 <div class="card chart-card">
                     <div class="chart-header">
                         <h3>Bitcoin / USD</h3>
@@ -79,12 +67,14 @@
                     </div>
                 </div>
 
-                <!-- TARJETA DE TRADING -->
                 <div class="card trade-card">
-                    <h3>Comprar Bitcoin</h3>
+                    <h3>Operar con Bitcoin</h3>
                     <p>Precio de mercado actual</p>
-                    <input type="number" id="buy-amount" placeholder="Cantidad en USD a invertir">
-                    <button onclick="buyBitcoin()" class="btn-buy">Comprar BTC</button>
+                    <input type="number" id="trade-amount" placeholder="Cantidad en USD a operar">
+                    <div class="trade-buttons">
+                        <button onclick="buyBitcoin()" class="btn-buy">Comprar</button>
+                        <button onclick="sellBitcoin()" class="btn-sell">Vender</button>
+                    </div>
                     <p id="trade-message"></p>
                 </div>
             </div>
