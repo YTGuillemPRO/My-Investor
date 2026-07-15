@@ -3,22 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Banco Demo</title>
+    <title>Simulador de Trading</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="dashboard">
-        <h1>Bienvenido a tu Banca Online</h1>
-        <div class="card">
-            <h2>Cuenta Ahorros</h2>
-            <p class="balance">Saldo: $<span id="saldo">10,000</span></p>
-        </div>
-        <div class="actions">
-            <input type="number" id="monto" placeholder="Monto a transferir">
-            <button onclick="transferir()">Transferir</button>
-        </div>
-        <p id="mensaje"></p>
+
+    <!-- PANTALLA DE LOGIN / REGISTRO -->
+    <div id="auth-container" class="container">
+        <h2>Simulador de Inversión</h2>
+        <input type="email" id="email" placeholder="Correo electrónico"><br>
+        <input type="password" id="password" placeholder="Contraseña"><br>
+        <button onclick="login()">Iniciar Sesión</button>
+        <button onclick="register()">Registrarse</button>
+        <p id="auth-message"></p>
     </div>
-    <script src="script.js"></script>
+
+    <!-- PANTALLA DEL DASHBOARD (OCULTA AL PRINCIPIO) -->
+    <div id="dashboard-container" class="container" style="display: none;">
+        <h2>Mi Portafolio</h2>
+        <div class="wallet">
+            <p>Saldo Virtual (USD): <strong>$<span id="usd-balance">0</span></strong></p>
+            <p>Mi Bitcoin (BTC): <strong><span id="btc-balance">0</span></strong></p>
+        </div>
+        
+        <div class="market">
+            <h3>Mercado: Bitcoin (BTC)</h3>
+            <p>Precio Actual: <strong>$<span id="btc-price">Cargando...</span></strong></p>
+            <input type="number" id="buy-amount" placeholder="Cantidad en USD a comprar">
+            <button onclick="buyBitcoin()">Comprar</button>
+            <p id="trade-message"></p>
+        </div>
+
+        <button onclick="logout()" class="logout-btn">Cerrar Sesión</button>
+    </div>
+
+    <!-- Usamos type="module" porque Firebase lo requiere -->
+    <script type="module" src="app.js"></script>
 </body>
 </html>
