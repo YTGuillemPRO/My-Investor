@@ -69,52 +69,61 @@ async function loadUserData() {
 
 function updateTotalBalance(usd, btc) {
     const total = usd + (btc * currentBtcPrice);
-    document.getElementById('total-balance').innerText = total.toFixed(2);
+    document.getElementById('total-balance').innerText = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
-// --- MERCADO Y GRÁFICO ---
+// --- MERCADO Y GRÁFICO (USANDO API DE BINANCE) ---
 async function initMarketData() {
     try {
-        // Traer precio de BTC, ETH y SOL
-        const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana');
+        // Binance API: Trae el precio y cambio de las últimas 24h de BTC, ETH y SOL
+        const response = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT"]');
         const data = await response.json();
         
         let marketHtml = '';
+        const coinNames = { BTCUSDT: 'Bitcoin', ETHUSDT: 'Ethereum', SOLUSDT: 'Solana' };
+        const coinSymbols = { BTCUSDT: 'BTC', ETHUSDT: 'ETH', SOLUSDT: 'SOL' };
+
         data.forEach(coin => {
-            if(coin.id === 'bitcoin') {
-                currentBtcPrice = coin.current_price;
-                document.getElementById('btc-price').innerText = currentBtcPrice.toLocaleString();
+            const price = parseFloat(coin.lastPrice);
+            const change = parseFloat(coin.priceChangePercent);
+            
+            if(coin.symbol === 'BTCUSDT') {
+                currentBtcPrice = price;
+                document.getElementById('btc-price').innerText = price.toLocaleString('en-US', {maximumFractionDigits: 2});
             }
-            const changeClass = coin.price_change_percentage_24h >= 0 ? 'change-up' : 'change-down';
+            
+            const changeClass = change >= 0 ? 'change-up' : 'change-down';
             marketHtml += `
                 <div class="market-item">
                     <div>
-                        <div class="name">${coin.symbol.toUpperCase()} <span style="color:#848e9c; font-weight:400;">${coin.name}</span></div>
-                        <div class="price">$${coin.current_price.toLocaleString()}</div>
+                        <div class="name">${coinSymbols[coin.symbol]} <span style="color:#848e9c; font-weight:400;">${coinNames[coin.symbol]}</span></div>
+                        <div class="price">$${price.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>
                     </div>
-                    <div class="${changeClass}">${coin.price_change_percentage_24h.toFixed(2)}%</div>
+                    <div class="${changeClass}">${change.toFixed(2)}%</div>
                 </div>
             `;
         });
         document.getElementById('crypto-list').innerHTML = marketHtml;
         
-        await loadUserData(); // Actualizar balance total con el nuevo precio
+        await loadUserData(); // Recalcular capital total
         fetchChartData(); // Cargar gráfico
 
-    } catch (error) { console.error("Error mercado:", error); }
+    } catch (error) { 
+        console.error("Error mercado Binance:", error); 
+    }
 }
 
 async function fetchChartData() {
     try {
-        // Historial de BTC de los últimos 7 días
-        const response = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7');
+        // Binance API: Historial de velas diarias de BTC de los últimos 7 días
+        const response = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=7');
         const data = await response.json();
         
-        const labels = data.prices.map(p => {
-            let d = new Date(p[0]);
+        const labels = data.map(candle => {
+            let d = new Date(candle[0]); // El primer elemento es el timestamp
             return d.toLocaleDateString('es-ES', {day: 'numeric', month: 'short'});
         });
-        const prices = data.prices.map(p => p[1]);
+        const prices = data.map(candle => parseFloat(candle[4])); // El indice 4 es el precio de cierre
 
         renderChart(labels, prices);
     } catch (error) { console.error("Error gráfico:", error); }
@@ -123,12 +132,11 @@ async function fetchChartData() {
 function renderChart(labels, prices) {
     const ctx = document.getElementById('priceChart').getContext('2d');
     
-    // Degradado para el área bajo la línea
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(46, 189, 133, 0.4)');
     gradient.addColorStop(1, 'rgba(46, 189, 133, 0)');
 
-    if (priceChart) priceChart.destroy(); // Limpiar gráfico anterior
+    if (priceChart) priceChart.destroy();
     
     priceChart = new Chart(ctx, {
         type: 'line',
@@ -140,9 +148,9 @@ function renderChart(labels, prices) {
                 borderColor: '#2ebd85',
                 backgroundColor: gradient,
                 fill: true,
-                tension: 0.4, // Curva suave
+                tension: 0.4,
                 borderWidth: 2,
-                pointRadius: 0 // Sin puntos en la línea
+                pointRadius: 0
             }]
         },
         options: {
@@ -157,9 +165,9 @@ function renderChart(labels, prices) {
     });
 }
 
-// --- TRADING ---
+// --- TRADING: COMPRAR Y VENDER ---
 window.buyBitcoin = async () => {
-    const amountUsd = parseFloat(document.getElementById('buy-amount').value);
+    const amountUsd = parseFloat(document.getElementById('trade-amount').value);
     const messageEl = document.getElementById('trade-message');
     
     if (isNaN(amountUsd) || amountUsd <= 0) {
@@ -176,7 +184,7 @@ window.buyBitcoin = async () => {
         let userBtc = docSnap.data().btc;
 
         if (amountUsd > userUsd) {
-            messageEl.innerText = "Saldo insuficiente.";
+            messageEl.innerText = "Saldo USD insuficiente.";
             messageEl.style.color = "#f6465d";
             return;
         }
@@ -193,6 +201,47 @@ window.buyBitcoin = async () => {
         
         messageEl.innerText = `¡Compra exitosa! +${btcPurchased.toFixed(6)} BTC`;
         messageEl.style.color = "#2ebd85";
-        document.getElementById('buy-amount').value = '';
+        document.getElementById('trade-amount').value = '';
+    }
+};
+
+window.sellBitcoin = async () => {
+    const amountUsd = parseFloat(document.getElementById('trade-amount').value);
+    const messageEl = document.getElementById('trade-message');
+    
+    if (isNaN(amountUsd) || amountUsd <= 0) {
+        messageEl.innerText = "Ingresa una cantidad válida.";
+        messageEl.style.color = "#f6465d";
+        return;
+    }
+
+    const docRef = doc(db, "users", currentUser.uid);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+        let userUsd = docSnap.data().usd;
+        let userBtc = docSnap.data().btc;
+
+        // Calcular cuánto BTC hay que vender para obtener esa cantidad de USD
+        let btcToSell = amountUsd / currentBtcPrice;
+
+        if (btcToSell > userBtc) {
+            messageEl.innerText = "No tienes suficientes BTC para vender.";
+            messageEl.style.color = "#f6465d";
+            return;
+        }
+
+        userUsd += amountUsd; // Sumamos los dólares
+        userBtc -= btcToSell; // Restamos el BTC vendido
+
+        await updateDoc(docRef, { usd: userUsd, btc: userBtc });
+
+        document.getElementById('usd-balance').innerText = userUsd.toFixed(2);
+        document.getElementById('btc-balance').innerText = userBtc.toFixed(6);
+        updateTotalBalance(userUsd, userBtc);
+        
+        messageEl.innerText = `¡Venta exitosa! +$${amountUsd.toFixed(2)} USD`;
+        messageEl.style.color = "#2ebd85";
+        document.getElementById('trade-amount').value = '';
     }
 };
