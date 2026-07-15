@@ -1,1 +1,24 @@
-
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Banco Demo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Bienvenido a tu Banca Online</h1>
+        <div class="card">
+            <h2>Cuenta Ahorros</h2>
+            <p class="balance">Saldo: $<span id="saldo">10,000</span></p>
+        </div>
+        <div class="actions">
+            <input type="number" id="monto" placeholder="Monto a transferir">
+            <button onclick="transferir()">Transferir</button>
+        </div>
+        <p id="mensaje"></p>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
